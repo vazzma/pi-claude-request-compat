@@ -120,14 +120,22 @@ risks. Review Anthropic's current terms before distributing this package.
 
 The package manifest already declares the Pi extension entry point and the
 `pi-package` discovery keyword. Before a release, verify the pinned host patch
-and recipe against the Pi and Claude Code versions you intend to support, then
-run:
+and recipe against the Pi and Claude Code versions you intend to support.
+
+### Automated Release (GitHub Actions)
+
+A GitHub Actions workflow is provided at [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
+1. Create an npm access token on [npmjs.com](https://www.npmjs.com) with publish permissions.
+2. Add it as a secret named `NPM_TOKEN` in repository settings (**Settings > Secrets and variables > Actions**).
+3. Create and publish a GitHub Release, or trigger the **Publish to npm** workflow manually via GitHub Actions (with optional dry-run support).
+
+### Manual Release
 
 ```sh
 npm test
 npm pack --dry-run
 npm login
-npm publish --access public
+npm publish --provenance --access public
 ```
 
 Publication needs npm ownership of the package name. Check that
