@@ -2,6 +2,12 @@
 
 Use your Anthropic OAuth login in Pi with Claude Code compatible requests. The extension adjusts the request body, headers, and tool names while keeping Pi's built-in Anthropic models, login, streaming, and retries. API-key requests are left alone.
 
+## Why another Claude Code provider?
+
+- It isn't a second provider: it keeps Pi's Anthropic login and model catalog.
+- It adds the OAuth billing attestation, Claude Code headers and beta flags, session metadata, and tool-name mapping; Pi still handles Anthropic streaming and retries.
+- It only changes official Anthropic OAuth requests. API-key and proxy requests pass through unchanged.
+
 ## Get started
 
 Requires `@earendil-works/pi-coding-agent` 0.87.1, Node 22.19+, and Claude Code **2.1.280** on `PATH`. This is the only Claude Code version with a reviewed recipe. Other versions, including 2.1.282, are rejected when an OAuth request starts.
