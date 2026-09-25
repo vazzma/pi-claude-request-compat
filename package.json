@@ -17,7 +17,8 @@
   "scripts": {
     "init": "node bin/pi-claude-request-compat.js init",
     "doctor": "node bin/pi-claude-request-compat.js doctor",
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "npm test"
   },
   "pi": { "extensions": ["./src/extension.js"] },
   "exports": {

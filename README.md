@@ -12,49 +12,69 @@ provider or alter Anthropic API-key calls.
 
 This is an implementation draft against Pi commit
 `7fd564cbb78f35f3de14d5382fea692b87ec4026`. The required Pi transport
-hook is in [`patches/pi-host.patch`](patches/pi-host.patch). The extension fails
-clearly on an unpatched Pi. Stock Pi cannot run this package until that hook is
-merged upstream or applied locally. The package has not been published.
+hook is in [`patches/pi-host.patch`](patches/pi-host.patch). Stock Pi cannot run
+the extension until that hook is merged upstream or applied locally. The npm
+package has not been published; `pi install npm:pi-claude-request-compat` will
+work only after publication. A successful package installation alone does not
+make the extension usable on stock Pi.
 
-## Install from a local checkout
+## Install
 
-Apply the host patch in a checkout of the pinned Pi commit and run that patched
-Pi build:
+First, use a Pi checkout at the pinned commit, apply the host patch, and run
+that patched Pi build. The patch is pinned to that source revision; verify it
+against any other Pi version before using it.
 
 ```sh
 cd /path/to/pi
+git checkout 7fd564cbb78f35f3de14d5382fea692b87ec4026
+git apply --check /path/to/pi-claude-request-compat/patches/pi-host.patch
 git apply /path/to/pi-claude-request-compat/patches/pi-host.patch
+npm install --ignore-scripts
+npm run build
 ```
 
 The patch adds one OAuth-scoped request middleware hook to Pi's Anthropic
 transport and marks main-session calls for cache policy. It does not replace
 Pi's provider.
 
-From this package directory, initialize the profile before loading the
-extension, then register the directory as a local Pi package:
+Install the package with that Pi build. Until it is published, use a local
+checkout or the GitHub source:
 
 ```sh
-node bin/pi-claude-request-compat.js init
-pi install .
+./pi-test.sh install /path/to/pi-claude-request-compat
+# or: ./pi-test.sh install git:github.com/vazzma/pi-claude-request-compat
+./pi-test.sh
 ```
 
-For a one-time run, use `pi -e .` instead of `pi install .`. Users can install
-the GitHub source with `pi install git:github.com/vazzma/pi-claude-request-compat`;
-they still need a patched Pi and the local `init` command.
+After publication, use `./pi-test.sh install npm:pi-claude-request-compat`
+from the patched Pi checkout. Once the hook is available in a released Pi,
+use `pi install npm:pi-claude-request-compat` instead. Pi
+discovers `src/extension.js` from the `pi.extensions` package manifest. For a
+one-time local run, use
+`./pi-test.sh -e /path/to/pi-claude-request-compat`.
 
-The command reads the installed `claude --version` and saves a local profile at
-`~/.pi/agent/claude-request-compat/profile.json` (or under
-`PI_CODING_AGENT_DIR`). Use `--claude /path/to/claude` if needed. The profile
-contains an installation ID,
-the detected version, and the reviewed recipe ID. It contains no OAuth token.
+On first load, the extension reads the installed `claude --version` and saves a
+local profile at `~/.pi/agent/claude-request-compat/profile.json` (or under
+`PI_CODING_AGENT_DIR`). Claude Code must be on `PATH` and have a reviewed
+recipe. If it is elsewhere, initialize the profile from a checkout before
+starting Pi:
+
+```sh
+node bin/pi-claude-request-compat.js init --claude /path/to/claude
+```
+
+The profile contains an installation ID, the detected version, and the
+reviewed recipe ID. It contains no OAuth token.
 Only Claude Code `2.1.280` has a recipe in this draft. An unknown version is
 rejected rather than treated as compatible from its version number alone. The
 command reads the official CLI version and creates a local installation ID;
 it does not read Claude Code's private state or generate a reusable wire hash.
 
-Run `node bin/pi-claude-request-compat.js doctor` to compare the current CLI
-version with the profile. This check is offline. Sign in to your own account through
-Pi's `/login anthropic`; Claude Code's own login is not imported. When Pi makes
+Run `node bin/pi-claude-request-compat.js doctor` from a checkout to compare
+the current CLI version with the profile. This check is offline. If the
+installed Claude Code version changes, run `init` again after a matching
+reviewed recipe is available. Sign in to your own account through Pi's
+`/login anthropic`; Claude Code's own login is not imported. When Pi makes
 the first OAuth inference request, the extension uses the token to ask the
 Claude CLI bootstrap endpoint for the account UUID if available. Bootstrap
 failure leaves the account field out and does not replace Pi's login or refresh.
@@ -95,3 +115,25 @@ without user-initiated validation on that user's own account.
 
 Subscription OAuth and Claude Code fingerprinting may carry account and terms
 risks. Review Anthropic's current terms before distributing this package.
+
+## Publish to npm (maintainers)
+
+The package manifest already declares the Pi extension entry point and the
+`pi-package` discovery keyword. Before a release, verify the pinned host patch
+and recipe against the Pi and Claude Code versions you intend to support, then
+run:
+
+```sh
+npm test
+npm pack --dry-run
+npm login
+npm publish --access public
+```
+
+Publication needs npm ownership of the package name. Check that
+`pi-claude-request-compat` is available with
+`npm view pi-claude-request-compat version` before publishing, or choose a scoped name
+and update the installation instructions. For later releases, update the
+`version` in `package.json` before publishing. The `prepublishOnly` script runs
+the local tests as a release gate. Publishing does not install or patch Pi for
+users; the host hook remains a prerequisite.
