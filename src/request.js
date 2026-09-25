@@ -154,7 +154,7 @@ function patchCch(body) {
   return bytes;
 }
 
-export function createOAuthRequestMiddleware(profile = readProfile(), { strict = false, onValidated } = {}) {
+export function createOAuthRequestMiddleware(profile = readProfile(), { strict = false, onValidated, onRejected } = {}) {
   const recipe = activeRecipe(profile);
   if (!profile || !recipe) {
     throw new Error("pi-claude-request-compat needs a local profile; run pi-claude-request-compat init");
@@ -256,6 +256,7 @@ export function createOAuthRequestMiddleware(profile = readProfile(), { strict =
           onValidated?.();
         }
         const response = await baseFetch(input, { ...init, headers, body });
+        if (response.status >= 400 && response.status < 500) onRejected?.(response.status);
         if (response.status >= 400 && response.status < 500 &&
             (await response.clone().text()).includes("claude_code_version_too_old")) {
           throw new Error(`Bundled compatibility profile ${recipe.id} (Claude Code ${recipe.claudeVersion}) is no longer accepted. Update pi-claude-request-compat.`);
