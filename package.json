@@ -1,0 +1,27 @@
+{
+  "name": "pi-claude-request-compat",
+  "version": "0.1.0",
+  "description": "Adds Claude Code OAuth request compatibility to Pi while retaining Pi's built-in Anthropic provider.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vazzma/pi-claude-request-compat.git"
+  },
+  "homepage": "https://github.com/vazzma/pi-claude-request-compat#readme",
+  "bugs": { "url": "https://github.com/vazzma/pi-claude-request-compat/issues" },
+  "engines": { "node": ">=22.19.0" },
+  "keywords": ["pi-package", "pi", "claude-code", "anthropic", "oauth"],
+  "files": ["src/", "bin/", "patches/", "README.md", "LICENSE", "NOTICE"],
+  "bin": { "pi-claude-request-compat": "./bin/pi-claude-request-compat.js" },
+  "scripts": {
+    "init": "node bin/pi-claude-request-compat.js init",
+    "doctor": "node bin/pi-claude-request-compat.js doctor",
+    "test": "node --test"
+  },
+  "pi": { "extensions": ["./src/extension.js"] },
+  "exports": {
+    ".": "./src/extension.js",
+    "./package.json": "./package.json"
+  }
+}
