@@ -6,80 +6,47 @@
 [![CodeQL](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/github/license/vazzma/pi-claude-request-compat)](LICENSE)
 
-Use your Anthropic OAuth login in Pi with Claude Code compatible requests. The extension adjusts the request body, headers, and tool names while keeping Pi's built-in Anthropic models, login, streaming, and retries. API-key requests are left alone.
+Use your Anthropic OAuth login in Pi with Claude Code-style requests. Keep Pi's login, models, tools, and workflow—no Claude Code installation needed.
 
-## Why another Claude Code provider?
+## Why this exists
 
-- It isn't a second provider: it keeps Pi's Anthropic login and model catalog.
-- It adds the OAuth billing attestation, Claude Code headers and beta flags, session metadata, and tool-name mapping; Pi still handles Anthropic streaming and retries.
-- It only changes official Anthropic OAuth requests. API-key and proxy requests pass through unchanged.
+A valid login is only part of the story: Claude Code's OAuth requests also carry specific headers, billing information, session metadata, and tool names. This extension adds those details to Pi's outgoing requests. Pi still handles the conversation, streaming, and retries. API-key and proxy requests pass through unchanged.
 
-## Install
+The idea and request behavior came from **oh-my-pi (omp)**—credit where it's due ([NOTICE](NOTICE)). This project builds on that work as a small extension for stock Pi, with automatic setup, a bundled compatibility profile that doesn't depend on your installed Claude version, and tests through the real Pi SDK. A separate comparison tool checks captured Claude requests and reports differences rather than assuming they match.
+
+## Get started
 
 ```sh
 pi install npm:pi-claude-request-compat
 ```
 
-## Setup
+Requires Pi **0.87.1** and Node **22.19+**. Run `/login anthropic` in Pi, then choose an Anthropic model.
 
-Requires Pi **0.87.1** and Node **22.19+**. Claude Code is not required.
+Setup is automatic, including migration of older profiles. The credential-free profile lives at `~/.pi/agent/claude-request-compat/profile.json` (or under `PI_CODING_AGENT_DIR`).
 
-In Pi, run `/login anthropic` and choose an Anthropic model. That's it.
-
-The extension automatically creates a credential-free profile at
-`~/.pi/agent/claude-request-compat/profile.json` (or under `PI_CODING_AGENT_DIR`).
-Existing profiles migrate automatically, preserving installation identity and
-cache preference. Installing or updating Claude Code has no effect on Pi.
-
-Optional diagnostics: `pi-claude-request-compat doctor`. Optional pre-creation:
-`pi-claude-request-compat init`. Neither requires Claude Code or a network call.
+For local diagnostics, run `pi-claude-request-compat doctor`.
 
 ## Developer checks
 
 ```sh
 npm ci
 npm test
-# Compare a pinned Claude executable against the real Pi provider/SDK:
+# Compare with a specific Claude executable:
 npm run compat:check -- --claude-version 2.1.282 --claude /path/to/claude
-# Replay checked-in reference evidence offline:
-npm run compat:check -- --reference compat/fixtures/claude-2.1.156-gateway.json
 ```
 
-The offline reference currently reports **DIFF**, intentionally: it was captured
-from Claude 2.1.156, predates the bundled profile and uses gateway mode. A green
-unit-test suite does not mean a successful Claude comparison. See
-[`compat/README.md`](compat/README.md) for capture scope and fixture maintenance.
+See [the comparison guide](compat/README.md) for offline replay and capture details. The checked-in Claude 2.1.156 reference currently reports **DIFF**; passing unit tests does not mean matching Claude requests.
 
 ## Security and transparency
 
-- **Automated scanning:** CodeQL for JavaScript and workflow code, weekly
-  dependency vulnerability audits, and dependency signature verification.
-- **Reviewed updates:** Dependabot opens update PRs; dependency review checks
-  newly introduced vulnerabilities. Workflow actions are pinned to commit hashes.
-- **Traceable releases:** npm releases are published from GitHub Actions with
-  signed provenance. Follow the provenance link on the
-  [npm package page](https://www.npmjs.com/package/pi-claude-request-compat).
-- **Credential handling:** Pi owns your login. The extension's local profile
-  contains no credentials; it uses your OAuth token in memory for Anthropic
-  requests and account bootstrap. It has no telemetry endpoint of its own.
+- CodeQL, weekly dependency audits, signature checks, and Dependabot update PRs.
+- Commit-pinned workflow actions and [npm releases with signed provenance](https://www.npmjs.com/package/pi-claude-request-compat).
+- Pi manages your login. The extension uses your token in memory for Anthropic requests and account lookup; it stores no credentials in its profile and has no telemetry endpoint of its own.
 
-See [the security policy](https://github.com/vazzma/pi-claude-request-compat/blob/main/SECURITY.md)
-for data handling and check scope, or
-[report a vulnerability privately](https://github.com/vazzma/pi-claude-request-compat/security/advisories/new).
-Badges link to check results; they are not a security certification.
+[Security policy](https://github.com/vazzma/pi-claude-request-compat/blob/main/SECURITY.md) · [Report a vulnerability privately](https://github.com/vazzma/pi-claude-request-compat/security/advisories/new). Badges show check results, not a security certification.
 
 ## Limits
 
-The bundled protocol profile (`oauth-wire-v1`, reference version **2.1.282**) is
-derived from oh-my-pi, not proven direct Claude Code parity. It changes only when
-the protocol needs updating, rather than for every local CLI upgrade. Server
-rejection of the bundled version requires an extension update.
+The bundled profile (`oauth-wire-v1`, reference **2.1.282**) follows request behavior studied from omp. It is not proven 1:1 Claude Code compatibility. Tests use the real Pi SDK, but Claude captures use synthetic credentials and a local gateway—not live Anthropic acceptance.
 
-Tests cover local request behavior and real Pi/SDK serialization. Reference
-captures use synthetic OAuth and a local gateway; gateway behavior differs from
-direct `api.anthropic.com` behavior. They do not establish full wire equivalence,
-agent behavior equivalence, or live Anthropic acceptance. Pi retains its own
-prompts, tools, orchestration and retries. Subscription use may be subject to
-Anthropic's terms.
-
-See [`NOTICE`](NOTICE) for provenance.
+Pi keeps its own prompts and agent behavior. If Anthropic rejects the bundled version, the extension needs an update. Subscription use remains subject to Anthropic's terms.
