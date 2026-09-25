@@ -1,5 +1,11 @@
 # pi-claude-request-compat
 
+[![npm version](https://img.shields.io/npm/v/pi-claude-request-compat?logo=npm)](https://www.npmjs.com/package/pi-claude-request-compat)
+[![CI](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/ci.yml)
+[![Security audit](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/security.yml)
+[![CodeQL](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/vazzma/pi-claude-request-compat/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/github/license/vazzma/pi-claude-request-compat)](LICENSE)
+
 Use your Anthropic OAuth login in Pi with Claude Code compatible requests. The extension adjusts the request body, headers, and tool names while keeping Pi's built-in Anthropic models, login, streaming, and retries. API-key requests are left alone.
 
 ## Why another Claude Code provider?
@@ -43,6 +49,24 @@ The offline reference currently reports **DIFF**, intentionally: it was captured
 from Claude 2.1.156, predates the bundled profile and uses gateway mode. A green
 unit-test suite does not mean a successful Claude comparison. See
 [`compat/README.md`](compat/README.md) for capture scope and fixture maintenance.
+
+## Security and transparency
+
+- **Automated scanning:** CodeQL for JavaScript and workflow code, weekly
+  dependency vulnerability audits, and dependency signature verification.
+- **Reviewed updates:** Dependabot opens update PRs; dependency review checks
+  newly introduced vulnerabilities. Workflow actions are pinned to commit hashes.
+- **Traceable releases:** npm releases are published from GitHub Actions with
+  signed provenance. Follow the provenance link on the
+  [npm package page](https://www.npmjs.com/package/pi-claude-request-compat).
+- **Credential handling:** Pi owns your login. The extension's local profile
+  contains no credentials; it uses your OAuth token in memory for Anthropic
+  requests and account bootstrap. It has no telemetry endpoint of its own.
+
+See [the security policy](https://github.com/vazzma/pi-claude-request-compat/blob/main/SECURITY.md)
+for data handling and check scope, or
+[report a vulnerability privately](https://github.com/vazzma/pi-claude-request-compat/security/advisories/new).
+Badges link to check results; they are not a security certification.
 
 ## Limits
 
