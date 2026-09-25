@@ -1,6 +1,6 @@
 {
   "name": "pi-claude-request-compat",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Adds Claude Code OAuth request compatibility to Pi while retaining Pi's built-in Anthropic provider.",
   "type": "module",
   "license": "MIT",

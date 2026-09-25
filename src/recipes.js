@@ -25,6 +25,31 @@ export const RECIPES = Object.freeze({
       "prompt-caching-scope-2026-01-05",
       "mid-conversation-system-2026-04-07"
     ]
+  }),
+  "2.1.282": Object.freeze({
+    id: "cli-2.1.282-omp-f89a6db",
+    claudeVersion: "2.1.282",
+    sdkVersion: "0.112.1",
+    runtimeVersion: "v26.3.0",
+    bootstrapModel: "claude-opus-4-8",
+    maxOutputTokens: 64000,
+    utilityBetas: [
+      "oauth-2025-04-20",
+      "interleaved-thinking-2025-05-14",
+      "thinking-token-count-2026-05-13",
+      "context-management-2025-06-27",
+      "prompt-caching-scope-2026-01-05",
+      "structured-outputs-2025-12-15"
+    ],
+    agentBetas: [
+      "claude-code-20250219",
+      "oauth-2025-04-20",
+      "interleaved-thinking-2025-05-14",
+      "thinking-token-count-2026-05-13",
+      "context-management-2025-06-27",
+      "prompt-caching-scope-2026-01-05",
+      "mid-conversation-system-2026-04-07"
+    ]
   })
 });
 

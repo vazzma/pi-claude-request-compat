@@ -16,9 +16,9 @@ pi install npm:pi-claude-request-compat
 
 ## Setup
 
-Requires Pi 0.87.1, Node 22.19+, and Claude Code **2.1.280** on `PATH`. This is the only version with a reviewed compatibility recipe. You don't need to create or import config, or sign in to Claude Code. On the first Anthropic OAuth request, the extension reads `claude --version` and creates its own profile at `~/.pi/agent/claude-request-compat/profile.json`; it contains no credentials.
+Requires Pi 0.87.1, Node 22.19+, and Claude Code **2.1.280** or **2.1.282** on `PATH`. These versions have reviewed compatibility recipes. You don't need to create or import config, or sign in to Claude Code. On the first Anthropic OAuth request, the extension reads `claude --version` and creates its own profile at `~/.pi/agent/claude-request-compat/profile.json`; it contains no credentials.
 
-In Pi, run `/login anthropic` and choose an Anthropic model. Pi uses its own OAuth login. Other Claude Code versions, including 2.1.282, are currently rejected.
+In Pi, run `/login anthropic` and choose an Anthropic model. Pi uses its own OAuth login. Other Claude Code versions without a reviewed recipe are rejected.
 
 ## Limits
 
