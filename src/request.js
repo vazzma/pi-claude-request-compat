@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { readProfile, activeRecipe } from "./profile.js";
 import { selectBetas } from "./recipes.js";
 import { xxhash64 } from "./xxhash64.js";
+import { assertOfficialUrl, requireOAuth, validateEnvelope } from "./strict.js";
 
 const BILLING_PREFIX = "x-anthropic-billing-header:";
 const PLACEHOLDER = "cch=00000";
@@ -153,21 +154,29 @@ function patchCch(body) {
   return bytes;
 }
 
-export function createOAuthRequestMiddleware(profile = readProfile()) {
+export function createOAuthRequestMiddleware(profile = readProfile(), { strict = false, onValidated } = {}) {
   const recipe = activeRecipe(profile);
   if (!profile || !recipe) {
     throw new Error("pi-claude-request-compat needs a local profile; run pi-claude-request-compat init");
   }
   return (model, context, options) => {
+    if (strict) {
+      assertOfficialUrl(model.baseUrl);
+    }
     const headerToken = Object.entries(options?.headers ?? {}).find(([name]) => name.toLowerCase() === "authorization")?.[1];
-    const token = options?.apiKey ?? /^Bearer\s+(sk-ant-oat\S*)$/i.exec(headerToken ?? "")?.[1];
+    const token = strict ? requireOAuth(options, model.headers)
+      : options?.apiKey ?? /^Bearer\s+(sk-ant-oat\S*)$/i.exec(headerToken ?? "")?.[1];
+    if (strict && model.provider !== "anthropic") throw new Error("Claude Compat blocked unexpected middleware routing");
     if (model.provider !== "anthropic" || !token?.toLowerCase().includes("sk-ant-oat") ||
         new URL(model.baseUrl).hostname !== "api.anthropic.com") return options;
     const sessionId = options.sessionId ?? randomUUID();
     let wireSessionId = sessionId;
     const declaredNames = declaredToolNames(context);
-    const baseFetch = options.fetch ?? globalThis.fetch;
-    if (typeof baseFetch !== "function") throw new Error("No fetch implementation for Anthropic OAuth request");
+    const transport = options.fetch ?? globalThis.fetch;
+    if (typeof transport !== "function") throw new Error("No fetch implementation for Anthropic OAuth request");
+    const baseFetch = strict
+      ? (input, init) => transport(input, { ...init, redirect: "error" })
+      : transport;
     const previousOnPayload = options.onPayload;
     return {
       ...options,
@@ -232,12 +241,21 @@ export function createOAuthRequestMiddleware(profile = readProfile()) {
       },
       fetch: async (input, init) => {
         const url = new URL(input instanceof Request ? input.url : String(input));
+        if (strict) {
+          assertOfficialUrl(url);
+          if (url.pathname !== "/v1/messages") throw new Error("Claude Compat blocked an unexpected request path");
+        }
         if (url.hostname !== "api.anthropic.com" || !url.pathname.includes("/messages")) {
           return baseFetch(input, init);
         }
         const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
         for (const [name, value] of Object.entries(compatibleHeaders(recipe, wireSessionId))) headers.set(name, value);
-        const response = await baseFetch(input, { ...init, headers, body: patchCch(init?.body) });
+        const body = patchCch(init?.body);
+        if (strict) {
+          validateEnvelope(body, headers, { token, model, recipe, sessionId: wireSessionId });
+          onValidated?.();
+        }
+        const response = await baseFetch(input, { ...init, headers, body });
         if (response.status >= 400 && response.status < 500 &&
             (await response.clone().text()).includes("claude_code_version_too_old")) {
           throw new Error(`Bundled compatibility profile ${recipe.id} (Claude Code ${recipe.claudeVersion}) is no longer accepted. Update pi-claude-request-compat.`);

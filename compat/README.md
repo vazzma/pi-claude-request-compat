@@ -1,6 +1,6 @@
 # Developer compatibility checks
 
-## Two independent layers
+## Test layers
 
 1. `npm test`: offline regression tests, including the real pinned Pi provider
    and Anthropic SDK. Transport is intercepted and returns synthetic SSE. Covers
@@ -8,7 +8,19 @@
    tool declarations, profile creation/migration, and independently generated
    long/Unicode seeded XXH64 vectors. Stub tests cover response-name decoding.
 2. `npm run compat:check`: a black-box observation from an actual Claude CLI,
-   compared with Pi's serialized request. Differences fail the command.
+    compared with Pi's serialized request. Differences fail the command.
+3. `npm run test:host`: requires Pi **0.87.1** on PATH. Runs the actual CLI in a
+   temporary home with synthetic credentials and intercepted transport. Checks
+   native provider loading, successful OAuth routing, paid-key rejection, and
+   guarded startup when the plugin is missing or fails to load—even with an
+   ordinary Anthropic credential available. CI installs the exact host version.
+
+The production provider is `claude-compat` with its own `claude-compat-messages`
+dispatch ID. It reuses Pi's Anthropic OAuth implementation and transport, while
+translating provider identity on history and response events. `npm test` checks
+multi-turn tool history and rejects invalid final envelopes before transport.
+The lower-level permissive adapter remains available for comparison scenarios;
+the registered provider always enables strict mode. No check uses real credits.
 
 ## Capture a reference
 

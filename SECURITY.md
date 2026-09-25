@@ -23,9 +23,17 @@ maintained separately. This is a community project with no guaranteed response S
   Adapted messages include account, device, and session metadata.
 - The extension has no telemetry collection endpoint of its own. Request
   content still goes to the configured model provider through Pi.
-- API-key and nonofficial-endpoint requests pass through without compatibility
-  rewriting. The developer capture harness uses synthetic credentials and a
-  local gateway; it is not an operating-system sandbox.
+- The `claude-compat` provider accepts OAuth only and validates its final
+  Messages envelope before sending. It rejects API keys, nonofficial endpoints,
+  and redirects. Ordinary `anthropic` models are not modified.
+- Pi stores a separate `claude-compat` OAuth credential using its existing
+  Anthropic login/refresh implementation. Existing credentials are not copied.
+- A missing extension cannot enforce policy. Use explicit `--provider
+  claude-compat --model <id>` or `pi-claude-request-compat run` to block startup
+  fallback; plain Pi may fall back from missing saved models. Local validation
+  is neither proof of server acceptance nor a subscription spending cap.
+- The developer capture harness uses synthetic credentials and a local gateway;
+  it is not an operating-system sandbox.
 
 ## Automated checks and supply chain
 

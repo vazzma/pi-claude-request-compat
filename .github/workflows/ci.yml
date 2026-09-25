@@ -31,5 +31,8 @@ jobs:
       - name: Run offline regression and reference negative-control tests
         run: npm test
 
+      - name: Verify strict routing through the pinned Pi host
+        run: npm exec --yes --ignore-scripts --package=@earendil-works/pi-coding-agent@0.87.1 -- npm run test:host
+
       - name: Validate npm package contents
         run: npm pack --dry-run

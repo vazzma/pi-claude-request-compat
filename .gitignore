@@ -5,5 +5,7 @@ node_modules/
 # Secrets and environment files
 .env
 .env.*
-!.env.example
 .npmrc
+
+# Local coding-agent context
+/AGENTS.md
