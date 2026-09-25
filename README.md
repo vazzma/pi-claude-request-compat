@@ -26,7 +26,7 @@ Requires Pi **0.87.1** and Node **22.19+**. Run `/login claude-compat` in Pi, th
 
 Setup is automatic, including migration of older profiles. The credential-free profile lives at `~/.pi/agent/claude-request-compat/profile.json` (or under `PI_CODING_AGENT_DIR`).
 
-The footer shows `Compat active`, the profile, and the last local validation state. `/claude-compat-status` explains the current route; `pi-claude-request-compat doctor` checks the local profile.
+The footer shows `Compat active`, the profile, and the last local validation state. If Anthropic rejects a Compat Messages request with HTTP 4xx, Pi immediately shows an error notification with the status and keeps `failed` in the footer—even if the transport later retries. Local validation and other provider errors also trigger an error notification. Review the failure before retrying; `/claude-compat-status` repeats the last reason. User cancellations do not trigger this alert. `pi-claude-request-compat doctor` checks the local profile.
 
 ### Prevent missing-plugin fallback
 

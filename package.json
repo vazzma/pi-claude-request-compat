@@ -1,6 +1,6 @@
 {
   "name": "pi-claude-request-compat",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "An OAuth-only Claude Compat selection for Pi with validated Claude Code-style requests.",
   "type": "module",
   "license": "MIT",

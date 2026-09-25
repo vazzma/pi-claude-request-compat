@@ -25,11 +25,14 @@ function decodeToolCalls(event, names) {
   return event;
 }
 
-export function createFallbackStream(streamSimpleAnthropic, createStream, { strict = false, onState = () => {} } = {}) {
+export function createFallbackStream(streamSimpleAnthropic, createStream, {
+  strict = false, onState = () => {}, onFailure = () => {}
+} = {}) {
   return (model, context, options) => {
     if (!strict && !isAnthropicOAuth(model, options)) return streamSimpleAnthropic(model, context, options);
     const output = createStream();
     void (async () => {
+      let rejectionReported = false;
       try {
         if (strict) {
           onState("checking");
@@ -40,7 +43,16 @@ export function createFallbackStream(streamSimpleAnthropic, createStream, { stri
           requireOAuth(options, model.headers);
         }
         const profile = await loadProfile();
-        const middleware = createOAuthRequestMiddleware(profile, { strict, onValidated: () => onState("validated") });
+        const middleware = createOAuthRequestMiddleware(profile, {
+          strict,
+          onValidated: () => { if (!rejectionReported) onState("validated"); },
+          onRejected: (status) => {
+            if (rejectionReported || options?.signal?.aborted) return;
+            rejectionReported = true;
+            onState("error");
+            onFailure(`Anthropic rejected the Claude Compat request (HTTP ${status})`);
+          }
+        });
         const names = new Map();
         for (const message of context.messages ?? []) {
           for (const tool of message.toolsAdded ?? []) {
@@ -57,13 +69,24 @@ export function createFallbackStream(streamSimpleAnthropic, createStream, { stri
             for (const message of [event.partial, event.message, event.error]) {
               if (message) { message.provider = COMPAT_PROVIDER; message.api = COMPAT_API; }
             }
-            if (event.type === "error") onState("error");
+            if (event.type === "error" && event.reason !== "aborted" &&
+                event.error?.stopReason !== "aborted" && !options?.signal?.aborted) {
+              if (!rejectionReported) {
+                onState("error");
+                onFailure(event.error?.errorMessage);
+              }
+            }
           }
           output.push(decodeToolCalls(event, names));
         }
         output.end();
       } catch (error) {
-        if (strict) onState("error");
+        if (strict && !options?.signal?.aborted) {
+          if (!rejectionReported) {
+            onState("error");
+            onFailure(error instanceof Error ? error.message : String(error));
+          }
+        }
         output.push({ type: "error", error: {
           role: "assistant", provider: model.provider, api: model.api, model: model.id,
           timestamp: Date.now(), content: [], stopReason: "error",
@@ -86,13 +109,27 @@ export default async function claudeCompat(pi) {
   const { streamSimpleAnthropic, streamAnthropic, createAssistantMessageEventStream } = await import("@earendil-works/pi-ai/compat");
   const base = anthropicProvider();
   let state = "not sent";
+  let lastFailure;
   let uiContext;
   const showStatus = () => {
     uiContext?.ui.setStatus("claude-compat", uiContext.model?.provider === COMPAT_PROVIDER
       ? `Compat active · ${DEFAULT_RECIPE.id} · ${state}` : "Compat inactive — select Claude Compat");
   };
   const wrap = (stream) => createFallbackStream(stream, createAssistantMessageEventStream, {
-    strict: true, onState(value) { state = value; showStatus(); }
+    strict: true,
+    onState(value) {
+      state = value;
+      if (value === "checking") lastFailure = undefined;
+      showStatus();
+    },
+    onFailure(reason) {
+      lastFailure = String(reason || "Unknown request error").replace(/\s+/g, " ").slice(0, 300);
+      state = "failed · /claude-compat-status";
+      try {
+        showStatus();
+        uiContext?.ui.notify(`Claude Compat failed: ${lastFailure}. Resolve this before retrying.`, "error");
+      } catch { /* UI errors must not replace the original stream error. */ }
+    }
   });
   pi.registerProvider({
     id: COMPAT_PROVIDER,
@@ -106,7 +143,7 @@ export default async function claudeCompat(pi) {
     streamSimple: wrap(streamSimpleAnthropic)
   });
   const update = (_event, ctx) => { uiContext = ctx; showStatus(); };
-  pi.on("session_start", (_event, ctx) => { state = "not sent"; update(_event, ctx); });
+  pi.on("session_start", (_event, ctx) => { state = "not sent"; lastFailure = undefined; update(_event, ctx); });
   pi.on("model_select", update);
   pi.registerCommand("claude-compat-status", {
     description: "Show Claude Compat routing and local validation status (no network request)",
@@ -114,7 +151,9 @@ export default async function claudeCompat(pi) {
       update(undefined, ctx);
       ctx.ui.notify(`Claude Compat: ${ctx.model?.provider === COMPAT_PROVIDER ? "selected" : "not selected"}. ` +
         `Auth policy: OAuth only. Profile: ${DEFAULT_RECIPE.id}. Last request: ${state}. ` +
-        "Local validation does not prove server acceptance. For missing-plugin protection launch with pi-claude-request-compat run.", "info");
+        (lastFailure ? `Last failure: ${lastFailure}. ` : "") +
+        "Local validation does not prove server acceptance. For missing-plugin protection launch with pi-claude-request-compat run.",
+      lastFailure ? "error" : "info");
     }
   });
 }
