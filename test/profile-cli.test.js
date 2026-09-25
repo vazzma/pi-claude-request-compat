@@ -38,4 +38,9 @@ test("init stores a local profile and doctor detects a changed Claude CLI versio
     (error) => error.code === 1 && /no reviewed compatibility recipe/.test(error.stderr)
   );
   assert.equal(JSON.parse(await fs.readFile(profileFile, "utf8")).claudeVersion, "2.1.280");
+
+  await fs.writeFile(fakeClaude, "#!/usr/bin/env node\nprocess.stdout.write('2.1.282 (Claude Code)\\n');\n", { mode: 0o755 });
+  const init282 = await execFileAsync(process.execPath, [CLI, "init", "--claude", fakeClaude], { env });
+  assert.match(init282.stdout, /Stored cli-2\.1\.282-omp-f89a6db/);
+  assert.equal(JSON.parse(await fs.readFile(profileFile, "utf8")).claudeVersion, "2.1.282");
 });
