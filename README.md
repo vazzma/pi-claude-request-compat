@@ -16,12 +16,46 @@ pi install npm:pi-claude-request-compat
 
 ## Setup
 
-Requires Pi 0.87.1, Node 22.19+, and Claude Code **2.1.280** or **2.1.282** on `PATH`. These versions have reviewed compatibility recipes. You don't need to create or import config, or sign in to Claude Code. On the first Anthropic OAuth request, the extension reads `claude --version` and creates its own profile at `~/.pi/agent/claude-request-compat/profile.json`; it contains no credentials.
+Requires Pi **0.87.1** and Node **22.19+**. Claude Code is not required.
 
-In Pi, run `/login anthropic` and choose an Anthropic model. Pi uses its own OAuth login. Other Claude Code versions without a reviewed recipe are rejected.
+In Pi, run `/login anthropic` and choose an Anthropic model. That's it.
+
+The extension automatically creates a credential-free profile at
+`~/.pi/agent/claude-request-compat/profile.json` (or under `PI_CODING_AGENT_DIR`).
+Existing profiles migrate automatically, preserving installation identity and
+cache preference. Installing or updating Claude Code has no effect on Pi.
+
+Optional diagnostics: `pi-claude-request-compat doctor`. Optional pre-creation:
+`pi-claude-request-compat init`. Neither requires Claude Code or a network call.
+
+## Developer checks
+
+```sh
+npm ci
+npm test
+# Compare a pinned Claude executable against the real Pi provider/SDK:
+npm run compat:check -- --claude-version 2.1.282 --claude /path/to/claude
+# Replay checked-in reference evidence offline:
+npm run compat:check -- --reference compat/fixtures/claude-2.1.156-gateway.json
+```
+
+The offline reference currently reports **DIFF**, intentionally: it was captured
+from Claude 2.1.156, predates the bundled profile and uses gateway mode. A green
+unit-test suite does not mean a successful Claude comparison. See
+[`compat/README.md`](compat/README.md) for capture scope and fixture maintenance.
 
 ## Limits
 
-Compatibility is checked against a specific Claude Code version. A new version needs a reviewed recipe. No live Anthropic acceptance is claimed yet. Subscription use may be subject to Anthropic's terms.
+The bundled protocol profile (`oauth-wire-v1`, reference version **2.1.282**) is
+derived from oh-my-pi, not proven direct Claude Code parity. It changes only when
+the protocol needs updating, rather than for every local CLI upgrade. Server
+rejection of the bundled version requires an extension update.
 
-Run `npm test` for local request and extension tests. See [`NOTICE`](NOTICE) for provenance.
+Tests cover local request behavior and real Pi/SDK serialization. Reference
+captures use synthetic OAuth and a local gateway; gateway behavior differs from
+direct `api.anthropic.com` behavior. They do not establish full wire equivalence,
+agent behavior equivalence, or live Anthropic acceptance. Pi retains its own
+prompts, tools, orchestration and retries. Subscription use may be subject to
+Anthropic's terms.
+
+See [`NOTICE`](NOTICE) for provenance.

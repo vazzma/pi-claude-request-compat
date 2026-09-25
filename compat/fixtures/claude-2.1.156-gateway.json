@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "scope": "gateway-synthetic-oauth-envelope-v1",
+  "capturedAt": "2026-09-25T13:46:21.402Z",
+  "reference": {
+    "version": "2.1.156",
+    "executableSha256": "9c1e8601031f5cbb3101e49dda22bf8ba31183692c705e267a6923585fa2ba09"
+  },
+  "model": "claude-opus-4-8",
+  "scenarios": [
+    {
+      "id": "utility",
+      "contract": {
+        "model": "claude-opus-4-8",
+        "stream": true,
+        "maxTokens": 64000,
+        "thinking": null,
+        "outputConfig": {
+          "effort": "high"
+        },
+        "betas": [
+          "claude-code-20250219",
+          "context-management-2025-06-27",
+          "effort-2025-11-24",
+          "extended-cache-ttl-2025-04-11",
+          "interleaved-thinking-2025-05-14",
+          "mid-conversation-system-2026-04-07",
+          "oauth-2025-04-20",
+          "prompt-caching-scope-2026-01-05"
+        ],
+        "app": "cli",
+        "sdkVersion": "0.94.0",
+        "billingFirst": true,
+        "identityPresent": false,
+        "systemCache": [
+          null,
+          {
+            "type": "ephemeral",
+            "ttl": "1h"
+          },
+          {
+            "type": "ephemeral",
+            "ttl": "1h"
+          }
+        ],
+        "tools": [],
+        "metadataShape": {
+          "session_id": "string",
+          "device_id": "string",
+          "account_uuid": "string"
+        },
+        "sessionHeaderMatches": true
+      }
+    },
+    {
+      "id": "tools-thinking",
+      "contract": {
+        "model": "claude-opus-4-8",
+        "stream": true,
+        "maxTokens": 64000,
+        "thinking": {
+          "type": "adaptive"
+        },
+        "outputConfig": {
+          "effort": "high"
+        },
+        "betas": [
+          "claude-code-20250219",
+          "context-management-2025-06-27",
+          "effort-2025-11-24",
+          "extended-cache-ttl-2025-04-11",
+          "interleaved-thinking-2025-05-14",
+          "mid-conversation-system-2026-04-07",
+          "oauth-2025-04-20",
+          "prompt-caching-scope-2026-01-05"
+        ],
+        "app": "cli",
+        "sdkVersion": "0.94.0",
+        "billingFirst": true,
+        "identityPresent": false,
+        "systemCache": [
+          null,
+          {
+            "type": "ephemeral",
+            "ttl": "1h"
+          },
+          {
+            "type": "ephemeral",
+            "ttl": "1h"
+          }
+        ],
+        "tools": [
+          {
+            "name": "Read",
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "object",
+              "properties": {
+                "file_path": {
+                  "description": "The absolute path to the file to read",
+                  "type": "string"
+                },
+                "offset": {
+                  "description": "The line number to start reading from. Only provide if the file is too large to read at once",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "limit": {
+                  "description": "The number of lines to read. Only provide if the file is too large to read at once.",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "pages": {
+                  "description": "Page range for PDF files (e.g., \"1-5\", \"3\", \"10-20\"). Only applicable to PDF files. Maximum 20 pages per request.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file_path"
+              ],
+              "additionalProperties": false
+            },
+            "cache": null,
+            "strict": null
+          }
+        ],
+        "metadataShape": {
+          "session_id": "string",
+          "device_id": "string",
+          "account_uuid": "string"
+        },
+        "sessionHeaderMatches": true
+      }
+    }
+  ]
+}

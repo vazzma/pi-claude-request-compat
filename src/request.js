@@ -156,7 +156,7 @@ function patchCch(body) {
 export function createOAuthRequestMiddleware(profile = readProfile()) {
   const recipe = activeRecipe(profile);
   if (!profile || !recipe) {
-    throw new Error("pi-claude-request-compat needs a reviewed local profile; run pi-claude-request-compat init");
+    throw new Error("pi-claude-request-compat needs a local profile; run pi-claude-request-compat init");
   }
   return (model, context, options) => {
     const headerToken = Object.entries(options?.headers ?? {}).find(([name]) => name.toLowerCase() === "authorization")?.[1];
@@ -171,6 +171,9 @@ export function createOAuthRequestMiddleware(profile = readProfile()) {
     const previousOnPayload = options.onPayload;
     return {
       ...options,
+      // Stock Pi selects its OAuth payload layout from apiKey, even when the
+      // caller owns the Authorization header. Keep both paths consistent.
+      apiKey: token,
       cacheRetention: options.cacheRetention ?? (options.requestPurpose === "main" ? profile.cacheMain : undefined),
       onPayload: async (payload, requestModel) => {
         const prior = await previousOnPayload?.(payload, requestModel);
@@ -237,7 +240,7 @@ export function createOAuthRequestMiddleware(profile = readProfile()) {
         const response = await baseFetch(input, { ...init, headers, body: patchCch(init?.body) });
         if (response.status >= 400 && response.status < 500 &&
             (await response.clone().text()).includes("claude_code_version_too_old")) {
-          throw new Error("Claude Code version is no longer accepted. Update Claude Code, then run pi-claude-request-compat init after a reviewed recipe is available.");
+          throw new Error(`Bundled compatibility profile ${recipe.id} (Claude Code ${recipe.claudeVersion}) is no longer accepted. Update pi-claude-request-compat.`);
         }
         return response;
       },

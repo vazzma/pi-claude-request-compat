@@ -1,14 +1,8 @@
 import { createOAuthRequestMiddleware } from "./request.js";
-import { createProfile, installedClaudeVersion, readProfile } from "./profile.js";
+import { createProfile } from "./profile.js";
 
 async function loadProfile() {
-  const profile = readProfile();
-  if (!profile) return (await createProfile()).profile;
-  const version = await installedClaudeVersion();
-  if (version !== profile.claudeVersion) {
-    throw new Error(`Claude Code changed from ${profile.claudeVersion} to ${version}; run pi-claude-request-compat init after a reviewed recipe is available`);
-  }
-  return profile;
+  return (await createProfile()).profile;
 }
 
 function isAnthropicOAuth(model, options) {

@@ -18,6 +18,7 @@
   "scripts": {
     "init": "node bin/pi-claude-request-compat.js init",
     "doctor": "node bin/pi-claude-request-compat.js doctor",
+    "compat:check": "node compat/check.js",
     "test": "node --test",
     "prepublishOnly": "npm test"
   },
