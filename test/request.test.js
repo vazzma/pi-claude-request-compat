@@ -12,9 +12,7 @@ const MODEL = {
   compat: { supportsContextManagement: true }
 };
 const PROFILE = {
-  schema: 1,
-  claudeVersion: "2.1.280",
-  recipeId: "cli-2.1.280-omp-f89a6db",
+  schema: 2,
   installId: "local-install-id",
   cacheMain: "long"
 };
@@ -56,6 +54,10 @@ test("XXH64 matches published byte vectors used by the wire attestation", () => 
   assert.equal(xxhash64(Buffer.from("")).toString(16), "ef46db3751d8e999");
   assert.equal(xxhash64(Buffer.from("a")).toString(16), "d24ec4f1a98c6e5b");
   assert.equal(xxhash64(Buffer.from("abc")).toString(16), "44bc2cf5ad770999");
+  // Independent reference: Python xxhash (C implementation), seed below.
+  const seed = 0x4d659218e32a3268n;
+  assert.equal(xxhash64(Buffer.from(Array.from({ length: 256 }, (_, i) => i)), seed).toString(16), "6f98c39ea90ffb65");
+  assert.equal(xxhash64(Buffer.from("héllo 🌍".repeat(10)), seed).toString(16), "e841e9975aeedef2");
 });
 
 test("OAuth request emits account metadata, prefixed tools, selected betas, headers and a patched billing hash", async () => {
@@ -96,7 +98,7 @@ test("OAuth request emits account metadata, prefixed tools, selected betas, head
   });
   assert.equal(calls.length, 2);
   const request = calls[1];
-  assert.equal(request.init.headers.get("user-agent"), "claude-cli/2.1.280 (external, cli)");
+  assert.equal(request.init.headers.get("user-agent"), "claude-cli/2.1.282 (external, cli)");
   assert.equal(request.init.headers.get("x-claude-code-session-id"), "session-123");
   assert.equal(request.init.headers.get("x-stainless-package-version"), "0.112.1");
   const sent = request.init.body.toString();
@@ -109,9 +111,9 @@ test("OAuth request emits account metadata, prefixed tools, selected betas, head
   assert.equal(match[1], expected);
   const firstUserText = "Please read this file.";
   const selected = [4, 7, 20].map((index) => firstUserText[index]).join("");
-  const suffix = createHash("sha256").update(`59cf53e54c78${selected}2.1.280`).digest("hex").slice(0, 3);
+  const suffix = createHash("sha256").update(`59cf53e54c78${selected}2.1.282`).digest("hex").slice(0, 3);
   assert.equal(transformed.system[0].text,
-    `x-anthropic-billing-header: cc_version=2.1.280.${suffix}; cc_entrypoint=cli; cch=00000;`);
+    `x-anthropic-billing-header: cc_version=2.1.282.${suffix}; cc_entrypoint=cli; cch=00000;`);
 });
 
 test("utility OAuth request removes agent-only betas and keeps short cache", async () => {
@@ -187,6 +189,6 @@ test("old Claude Code version response produces an actionable stale-recipe error
   const transformed = await options.onPayload(payload(), MODEL);
   await assert.rejects(
     options.fetch("https://api.anthropic.com/v1/messages", { body: JSON.stringify(transformed) }),
-    /reviewed recipe is available/
+    /Update pi-claude-request-compat/
   );
 });

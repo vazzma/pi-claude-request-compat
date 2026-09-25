@@ -11,9 +11,7 @@ test("first load creates a profile and registers the middleware", async () => {
   const originalPath = process.env.PATH;
   const originalAgentDir = process.env.PI_CODING_AGENT_DIR;
   try {
-    const executable = path.join(root, "claude");
-    await fs.writeFile(executable, "#!/bin/sh\necho '2.1.280 (Claude Code)'\n", { mode: 0o755 });
-    process.env.PATH = `${root}${path.delimiter}${originalPath ?? ""}`;
+    process.env.PATH = root; // No Claude installation needed.
     process.env.PI_CODING_AGENT_DIR = path.join(root, "agent");
 
     let middleware;
@@ -21,8 +19,8 @@ test("first load creates a profile and registers the middleware", async () => {
 
     assert.equal(typeof middleware, "function");
     const profile = JSON.parse(await fs.readFile(path.join(root, "agent", "claude-request-compat", "profile.json"), "utf8"));
-    assert.equal(profile.claudeVersion, "2.1.280");
-    assert.equal(profile.recipeId, "cli-2.1.280-omp-f89a6db");
+    assert.equal(profile.schema, 2);
+    assert.equal(profile.claudeVersion, undefined);
   } finally {
     if (originalPath === undefined) delete process.env.PATH;
     else process.env.PATH = originalPath;
@@ -88,12 +86,12 @@ test("stock Pi wrapper leaves API keys alone and decodes OAuth tool names", asyn
     assert.equal(typeof calls[1].fetch, "function");
     assert.equal(oauthResult.content[0].name, "Bash");
     await fs.writeFile(path.join(root, "claude"), "#!/bin/sh\necho '2.1.282 (Claude Code)'\n", { mode: 0o755 });
-    const staleResult = await stream(model, context, { apiKey: "sk-ant-oat-test" }).result();
-    assert.match(staleResult.errorMessage, /Claude Code changed from 2\.1\.280 to 2\.1\.282/);
-    assert.equal(calls.length, 2);
+    const upgradedResult = await stream(model, context, { apiKey: "sk-ant-oat-test" }).result();
+    assert.equal(upgradedResult.content[0].name, "Bash");
+    assert.equal(calls.length, 3);
     const proxyOptions = { apiKey: "sk-ant-oat-test" };
     await stream({ ...model, baseUrl: "https://proxy.example.test" }, context, proxyOptions).result();
-    assert.strictEqual(calls[2], proxyOptions);
+    assert.strictEqual(calls[3], proxyOptions);
   } finally {
     if (originalAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
     else process.env.PI_CODING_AGENT_DIR = originalAgentDir;

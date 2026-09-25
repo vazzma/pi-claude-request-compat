@@ -1,28 +1,25 @@
 #!/usr/bin/env node
-import { activeRecipe, createProfile, installedClaudeVersion, profilePath, readProfile } from "../src/profile.js";
+import { createProfile, profilePath, readProfile } from "../src/profile.js";
+import { DEFAULT_RECIPE } from "../src/recipes.js";
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
-  const executable = args[0] === "--claude" ? args[1] : "claude";
-  if (args.length > 0 && (args.length !== 2 || args[0] !== "--claude" || !args[1])) {
-    throw new Error("Usage: pi-claude-request-compat <init|doctor> [--claude /path/to/claude]");
+  if (args.length > 0) {
+    throw new Error("Usage: pi-claude-request-compat <init|doctor>. Claude Code is no longer required; remove --claude.");
   }
   if (command === "init") {
-    const { profile, target } = await createProfile(executable);
-    process.stdout.write(`Stored ${profile.recipeId} at ${target}\nUse Pi's /login anthropic for your own account.\n`);
+    const { target } = await createProfile();
+    process.stdout.write(`Profile ready at ${target}\nUse Pi's /login anthropic for your own account.\n`);
     return;
   }
   if (command === "doctor") {
     const profile = readProfile();
-    if (!profile) throw new Error(`No profile at ${profilePath()}; run pi-claude-request-compat init`);
-    const actualVersion = await installedClaudeVersion(executable);
-    if (!activeRecipe(profile) || actualVersion !== profile.claudeVersion) {
-      throw new Error(`Profile is stale: stored ${profile.claudeVersion}, installed ${actualVersion}. Rerun init after a reviewed recipe is available.`);
-    }
-    process.stdout.write(`Profile ready: Claude Code ${actualVersion}, recipe ${profile.recipeId}. No network request made.\n`);
+    process.stdout.write(`Protocol: ${DEFAULT_RECIPE.id}; reference Claude Code ${DEFAULT_RECIPE.claudeVersion}; provenance ${DEFAULT_RECIPE.provenance}\n`);
+    process.stdout.write(`Local profile: ${!profile ? "created automatically on first OAuth request" : profile.schema === 1 ? "will migrate automatically" : "ready"} (${profilePath()})\n`);
+    process.stdout.write("Claude Code installation: not required. No network request made; live acceptance and direct Claude parity are not verified.\n");
     return;
   }
-  throw new Error("Usage: pi-claude-request-compat <init|doctor> [--claude /path/to/claude]");
+  throw new Error("Usage: pi-claude-request-compat <init|doctor>");
 }
 
 main().catch((error) => {
