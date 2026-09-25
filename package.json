@@ -1,7 +1,7 @@
 {
   "name": "pi-claude-request-compat",
-  "version": "0.1.3",
-  "description": "Adds Claude Code OAuth request compatibility to Pi while retaining Pi's built-in Anthropic provider.",
+  "version": "0.2.0",
+  "description": "An OAuth-only Claude Compat selection for Pi with validated Claude Code-style requests.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -13,13 +13,14 @@
   "engines": { "node": ">=22.19.0" },
   "dependencies": { "@earendil-works/pi-ai": "0.87.1" },
   "keywords": ["pi-package", "pi", "claude-code", "anthropic", "oauth"],
-  "files": ["src/", "bin/", "patches/", "README.md", "LICENSE", "NOTICE"],
-  "bin": { "pi-claude-request-compat": "./bin/pi-claude-request-compat.js" },
+  "files": ["src/", "bin/", "README.md", "LICENSE", "NOTICE"],
+  "bin": { "pi-claude-request-compat": "bin/pi-claude-request-compat.js" },
   "scripts": {
     "init": "node bin/pi-claude-request-compat.js init",
     "doctor": "node bin/pi-claude-request-compat.js doctor",
     "compat:check": "node compat/check.js",
     "test": "node --test",
+    "test:host": "node --test compat/host-check.js",
     "prepublishOnly": "npm test"
   },
   "pi": { "extensions": ["./src/extension.js"] },
