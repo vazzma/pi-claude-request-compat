@@ -11,7 +11,7 @@
   "homepage": "https://github.com/vazzma/pi-claude-request-compat#readme",
   "bugs": { "url": "https://github.com/vazzma/pi-claude-request-compat/issues" },
   "engines": { "node": ">=22.19.0" },
-  "dependencies": { "@earendil-works/pi-ai": "0.87.1" },
+  "dependencies": { "@earendil-works/pi-ai": "1.0.4" },
   "keywords": ["pi-package", "pi", "claude-code", "anthropic", "oauth"],
   "files": ["src/", "bin/", "README.md", "LICENSE", "NOTICE"],
   "bin": { "pi-claude-request-compat": "bin/pi-claude-request-compat.js" },
